@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import * as anchor from '@project-serum/anchor';
 
 import styled from 'styled-components';
-import { Container, Snackbar } from '@material-ui/core';
+import { Button, Checkbox, Container, FormControlLabel, FormGroup, Snackbar } from '@material-ui/core';
 import Paper from '@material-ui/core/Paper';
 import Alert from '@material-ui/lab/Alert';
 import Grid from '@material-ui/core/Grid';
@@ -56,6 +56,7 @@ const Home = (props: HomeProps) => {
   const [isWhitelistUser, setIsWhitelistUser] = useState(false);
   const [isPresale, setIsPresale] = useState(false);
   const [discountPrice, setDiscountPrice] = useState<anchor.BN>();
+  const [termsAndConditions, setTermsAndConditions] = useState<boolean>(false);
 
   const rpcUrl = props.rpcHost;
   const wallet = useWallet();
@@ -280,8 +281,18 @@ const Home = (props: HomeProps) => {
     refreshCandyMachineState,
   ]);
 
+  const onCheckboxClick = () => {
+    setTermsAndConditions(!termsAndConditions);
+  }
+
   return (
     <Container style={{ marginTop: 100 }}>
+      <FormGroup>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 40}}>
+          <FormControlLabel style={{ 'color': 'white' }} control={<Checkbox defaultValue={'false'} onChange={onCheckboxClick} />} label="I agree to the terms and conditions" />
+          <Button style={{ 'color': 'white' }} target="_blank" href="https://docs.honey.finance/links/terms-and-conditions">Terms and Conditions</Button>
+        </div>
+      </FormGroup>
       <Container maxWidth="xs" style={{ position: 'relative' }}>
         <Paper
           style={{
@@ -330,8 +341,8 @@ const Home = (props: HomeProps) => {
                       {isWhitelistUser && discountPrice
                         ? `◎ ${formatNumber.asNumber(discountPrice)}`
                         : `◎ ${formatNumber.asNumber(
-                            candyMachine.state.price,
-                          )}`}
+                          candyMachine.state.price,
+                        )}`}
                     </Typography>
                   </Grid>
                   <Grid item xs={5}>
@@ -361,18 +372,18 @@ const Home = (props: HomeProps) => {
                           style={{ justifyContent: 'flex-end' }}
                           status={
                             candyMachine?.state?.isSoldOut ||
-                            (endDate && Date.now() > endDate.getTime())
+                              (endDate && Date.now() > endDate.getTime())
                               ? 'COMPLETED'
                               : isPresale
-                              ? 'PRESALE'
-                              : 'LIVE'
+                                ? 'PRESALE'
+                                : 'LIVE'
                           }
                           onComplete={toggleMintButton}
                         />
                         {isPresale &&
                           candyMachine.state.goLiveDate &&
                           candyMachine.state.goLiveDate.toNumber() >
-                            new Date().getTime() / 1000 && (
+                          new Date().getTime() / 1000 && (
                             <Typography
                               variant="caption"
                               align="center"
@@ -389,9 +400,9 @@ const Home = (props: HomeProps) => {
               )}
               <MintContainer>
                 {candyMachine?.state.isActive &&
-                candyMachine?.state.gatekeeper &&
-                wallet.publicKey &&
-                wallet.signTransaction ? (
+                  candyMachine?.state.gatekeeper &&
+                  wallet.publicKey &&
+                  wallet.signTransaction ? (
                   <GatewayProvider
                     wallet={{
                       publicKey:
@@ -410,7 +421,7 @@ const Home = (props: HomeProps) => {
                       candyMachine={candyMachine}
                       isMinting={isUserMinting}
                       onMint={onMint}
-                      isActive={isActive || (isPresale && isWhitelistUser)}
+                      isActive={(isActive || (isPresale && isWhitelistUser)) && termsAndConditions}
                     />
                   </GatewayProvider>
                 ) : (
@@ -418,7 +429,7 @@ const Home = (props: HomeProps) => {
                     candyMachine={candyMachine}
                     isMinting={isUserMinting}
                     onMint={onMint}
-                    isActive={isActive || (isPresale && isWhitelistUser)}
+                    isActive={(isActive || (isPresale && isWhitelistUser)) && termsAndConditions}
                   />
                 )}
               </MintContainer>
@@ -447,7 +458,7 @@ const Home = (props: HomeProps) => {
           {alertState.message}
         </Alert>
       </Snackbar>
-    </Container>
+    </Container >
   );
 };
 
@@ -465,8 +476,8 @@ const getCountdownDate = (
     candyMachine.state.goLiveDate
       ? candyMachine.state.goLiveDate
       : candyMachine.state.isPresale
-      ? new anchor.BN(new Date().getTime() / 1000)
-      : undefined,
+        ? new anchor.BN(new Date().getTime() / 1000)
+        : undefined,
   );
 };
 
